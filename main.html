@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            background-color: black;
+            color: white;
+            font-family: Tahoma, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            text-align: center;
+            margin: 0;
+        }
+        .box {
+            background-color: black;
+            border: 2px solid white;
+            border-radius: 15px;
+            width: 30vw;
+            padding: 20px;
+            text-align: center;
+        }
+        .box h1 {
+            font-size: 1.5em;
+            margin: 0;
+        }
+        .input-container {
+            display: flex;
+            align-items: center; 
+        }
+        .input-box {
+            flex: 1; 
+            padding: 15px;
+            margin: 20px 0; 
+            border: 2px solid white;
+            border-radius: 10px 0 0 10px; 
+            background-color: black;
+            color: white;
+            text-align: left; 
+        }
+        .message {
+            color: red; 
+            font-size: 0.9em;
+            display: none; 
+            margin-top: 15px; 
+            text-align: center; 
+        }
+        .success-message {
+            color: green; 
+            display: none; 
+        }
+        .upload-button {
+            background-color: black; 
+            color: white; 
+            border: none; 
+            font-size: 1.5em; 
+            cursor: pointer;
+            height: 40px; 
+            padding: 0 10px; 
+            border-radius: 0 10px 10px 0; 
+            margin-right: 5px; 
+        }
+        .tilde-button {
+            background-color: black; 
+            color: white; 
+            border: none; 
+            font-size: 1.5em; 
+            cursor: pointer;
+            height: 40px; 
+            padding: 0 10px; 
+            border-radius: 10px; 
+            margin-top: 5px; 
+            margin-left: 5px; 
+        }
+        .button-large {
+            width: 100%; 
+            padding: 15px;
+            margin-top: 20px; 
+            border: 2px solid white;
+            border-radius: 10px;
+            background-color: white;
+            color: black;
+            font-size: 1.2em;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h1>Upload a file</h1>
+        <div class="input-container">
+            <input type="text" class="input-box" id="file-input" value="To upload the file click On the excessive .." readonly>
+            <button class="upload-button" onclick="triggerFileUpload()">+</button> 
+        </div>
+        <button class="tilde-button" onclick="showAdmin()">~</button>
+        <div>
+            <button class="button-large" onclick="uploadFile()">Upload</button>
+        </div>
+        <p class="message" id="message">You must upload the file first ..</p>
+        <p class="success-message" id="success-message">File uploaded successfully ..</p>
+    </div>
+
+    <script>
+        let selectedFile = null; // لتخزين الملف المحدد
+
+        function triggerFileUpload() {
+            const fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.onchange = () => {
+                selectedFile = fileInput.files[0]; 
+                if (selectedFile) {
+                    document.getElementById("file-input").value = selectedFile.name; 
+                }
+            };
+            fileInput.click(); 
+        }
+
+        function uploadFile() {
+            const message = document.getElementById("message");
+            const successMessage = document.getElementById("success-message");
+
+            if (!selectedFile) {
+                message.style.display = "block"; 
+                setTimeout(() => {
+                    message.style.display = "none"; 
+                }, 1200);
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("files", selectedFile); 
+
+            fetch("/upload", {
+                method: "POST",
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                successMessage.textContent = "File uploaded successfully .."; 
+                successMessage.style.display = "block"; 
+                setTimeout(() => {
+                    successMessage.style.display = "none"; 
+                }, 1200);
+                document.getElementById("file-input").value = "To upload the file click On the excessive .."; 
+                selectedFile = null; 
+            })
+            .catch(error => {
+                message.textContent = "حدث خطأ أثناء رفع الملف"; 
+                message.style.display = "block"; 
+                setTimeout(() => {
+                    message.style.display = "none"; 
+                }, 1200);
+            });
+        }
+
+        function showAdmin() {
+            window.location.href = "/admin"; 
+        }
+    </script>
+</body>
+</html>

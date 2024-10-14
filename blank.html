@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Download Folder</title>
+    <style>
+        body {
+            background-color: black;
+            color: white;
+            font-family: Tahoma, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            text-align: center;
+            margin: 0;
+            position: relative;
+        }
+        .container {
+            background-color: black;
+            border: 2px solid white;
+            border-radius: 15px;
+            padding: 20px;
+            width: 30vw;
+            position: relative;
+        }
+        .input-box {
+            padding: 15px;
+            margin: 10px 0;
+            border: 2px solid white;
+            border-radius: 10px;
+            background-color: black;
+            color: white;
+            width: calc(100% - 24px);
+            text-align: left;
+            font-family: Tahoma, sans-serif; /* تغيير الخط */
+        }
+        .file-count-box {
+            width: 12.5%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 2px solid white;
+            border-radius: 10px;
+            background-color: black;
+            color: white;
+            text-align: center;
+            font-size: 1.5em;
+        }
+        .button-large {
+            width: 100%;
+            padding: 15px;
+            margin-top: 20px;
+            border: 2px solid white;
+            border-radius: 10px;
+            background-color: white;
+            color: black;
+            font-size: 1.2em;
+            cursor: pointer;
+        }
+        .message {
+            color: red;
+            font-size: 0.9em;
+            display: none;
+            margin-top: 15px;
+            text-align: center;
+        }
+        .success-message {
+            color: green;
+            display: none;
+        }
+        .close-button {
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            color: white;
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <button class="close-button" onclick="goToHome()">✖</button>
+        <h1>Download Folder</h1>
+        <input type="text" class="file-count-box" id="file-count" value="0" readonly>
+        <input type="text" class="input-box" id="folder-name" placeholder="Enter folder name ..">
+        <button class="button-large" id="download-button" onclick="downloadFolder()">Download</button>
+        <p class="message" id="error-message">You must specify the folder name ..</p>
+        <p class="success-message" id="success-message">Download started ..</p>
+    </div>
+
+    <script>
+        let fileCount = 0; 
+        const fileCountInput = document.getElementById("file-count");
+        const folderNameInput = document.getElementById("folder-name");
+        const downloadButton = document.getElementById("download-button");
+        const errorMessage = document.getElementById("error-message");
+        const successMessage = document.getElementById("success-message");
+
+        // تحديث عدد الملفات بعد رفعها مباشرة
+        function updateFileCount(newCount) {
+            fileCount = newCount;
+            fileCountInput.value = fileCount; 
+        }
+
+        // استدعاء API لعرض عدد الملفات
+        function getFileCount() {
+            fetch("/file-count")
+                .then(response => response.json())
+                .then(data => {
+                    updateFileCount(data.file_count);
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                });
+        }
+
+        // تحميل المجلد
+        function downloadFolder() {
+            const folderName = folderNameInput.value;
+
+            if (!folderName) {
+                errorMessage.style.display = 'block';
+                setTimeout(() => {
+                    errorMessage.style.display = 'none';
+                }, 2000);
+                return;
+            }
+
+            successMessage.style.display = 'block';
+            setTimeout(() => {
+                successMessage.style.display = 'none';
+            }, 2000);
+
+            // استدعاء الـ API لتنزيل المجلد بعد إدخال الاسم
+            fetch(`/download?folderName=${encodeURIComponent(folderName)}`)
+            .then(response => response.blob())
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${folderName}`; // حفظ باسم المجلد الذي أدخله المستخدم
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+
+                // إعادة تعيين العدد إلى 0 والنص إلى الافتراضي بعد التنزيل
+                updateFileCount(0);
+                folderNameInput.value = '';
+                folderNameInput.placeholder = "Enter folder name ..";
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+        // استدعاء لعرض عدد الملفات عند فتح الصفحة
+        getFileCount();
+        
+        function goToHome() {
+            window.location.href = "/"; // الانتقال إلى الصفحة الرئيسية
+        }
+    </script>
+</body>
+</html>
